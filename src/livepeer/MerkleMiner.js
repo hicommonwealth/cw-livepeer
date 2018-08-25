@@ -10,11 +10,12 @@ const MerkleMineArtifact = require("./artifacts/MerkleMine.json")
 const ERC20Artifact = require("./artifacts/ERC20.json")
 
 module.exports = class MerkleMiner {
-    constructor(provider, merkleTree, merkleMineAddress, callerAddress) {
+    constructor(provider, merkleTree, merkleMineAddress, multiMerkleMineAddress, callerAddress) {
         this.web3 = new Web3();
         this.web3.setProvider(provider);
         this.merkleTree = merkleTree;
         this.merkleMineAddress = addHexPrefix(merkleMineAddress);
+        this.multiMerkleMineAddress = addHexPrefix(multiMerkleMineAddress);
         this.callerAddress = callerAddress;
     }
 
@@ -58,7 +59,7 @@ module.exports = class MerkleMiner {
         }
     }
 
-    validateProofOfRecipientLocal(recipientAddress) {
+    validateLocalProof(recipientAddress) {
         // Validate proof locally
         let proof
 
@@ -111,7 +112,6 @@ module.exports = class MerkleMiner {
     // TODO: FINISH THIS IT IS NOT COMPLETE
     // TODO: TEST TEST TEST TEST TEST TEST
     async submitBatchProofs(txKeyManager, callerAddress, gasPrice, recipients) {
-        const merkleMine = await this.getMerkleMine();
         const multiMerkleMine = await this.getMultiMerkleMine();
         const generateFn = merkleMine.methods.multiGenerate(
             this.merkleMineAddress,
