@@ -1,17 +1,17 @@
 {
-  "name": "node-flowtype-boilerplate",
+  "name": "cw-livepeer",
   "version": "0.0.0",
-  "description": "Minimalistic boilerplate to quick-start Node.js development in ES6+ (stage-3) with Flowtype checking.",
-  "author": "Jakub Synowiec <github@jakubsynowiec.info> (https://jakubsynowiec.info)",
+  "description": "Commonwealth's Livepeer Utilities",
+  "author": "Drew Stone <drew@commonwealth.im>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jsynowiec/node-flowtype-boilerplate.git"
+    "url": "https://github.com/hicommonwealth/cw-livepeer.git"
   },
   "bugs": {
-    "url": "https://github.com/jsynowiec/node-flowtype-boilerplate/issues"
+    "url": "https://github.com/hicommonwealth/cw-livepeer/issues"
   },
-  "homepage": "https://github.com/jsynowiec/node-flowtype-boilerplate#readme",
+  "homepage": "https://github.com/hicommonwealth/cw-livepeer#readme",
   "engineStrict": true,
   "engines": {
     "node": ">=8.9"
@@ -25,6 +25,7 @@
     "babel-plugin-transform-flow-strip-types": "~6.22.0",
     "babel-plugin-transform-runtime": "~6.23.0",
     "babel-preset-stage-3": "~6.24.1",
+    "babel-watch": "^2.0.7",
     "eslint": "~4.19.1",
     "eslint-config-airbnb-base": "~12.1.0",
     "eslint-plugin-flowtype": "~2.46.3",
@@ -42,9 +43,19 @@
     "test-only": "jest --coverage",
     "test:watch": "jest --watch",
     "build": "babel src/**/*.js -d dist",
-    "build:watch": "babel --watch src/**/*.js -d dist"
+    "build:watch": "babel --watch src/**/*.js -d dist",
+    "start": "node_modules/babel-watch/babel-watch.js src/ "
   },
   "dependencies": {
-    "babel-runtime": "~6.26.0"
+    "@types/mongodb": "^3.1.4",
+    "babel-runtime": "~6.26.0",
+    "bignumber.js": "^7.2.1",
+    "bluebird": "^3.5.1",
+    "ethereumjs-tx": "^1.3.7",
+    "ethereumjs-util": "^5.2.0",
+    "keythereum": "^1.0.4",
+    "mongodb": "^3.1.3",
+    "r2": "^2.0.1",
+    "web3": "^1.0.0-beta.35"
   }
 }

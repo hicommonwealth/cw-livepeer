@@ -5,12 +5,14 @@ yarn-error.log
 
 # Dependencies
 node_modules/
+installed_contracts/
 
 # Coverage
 coverage/
 
 # Transpiled files
 dist/
+build/
 
 # VS Code
 .vscode
@@ -19,3 +21,6 @@ jsconfig.json
 # Misc
 .DS_Store
 tmp/
+
+# Environment variables
+.env
