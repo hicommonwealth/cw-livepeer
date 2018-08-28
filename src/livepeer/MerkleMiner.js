@@ -6,8 +6,8 @@
 const Web3 = require("web3")
 const BigNumber = require("bignumber.js")
 const { addHexPrefix } = require("ethereumjs-util")
-const MerkleMineArtifact = require("./artifacts/MerkleMine.json")
-const ERC20Artifact = require("./artifacts/ERC20.json")
+const MerkleMineArtifact = require("../../artifacts/MerkleMine.json")
+const ERC20Artifact = require("../../artifacts/ERC20.json")
 
 module.exports = class MerkleMiner {
     constructor(provider, merkleTree, merkleMineAddress, multiMerkleMineAddress, callerAddress) {

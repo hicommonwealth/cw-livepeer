@@ -24,6 +24,8 @@ const makeTree = async accountsBuf => {
     };
 }
 
+const makeTreeFromAccounts = async (accounts) => (new MerkleTree(accounts));
+
 const getAccountsBuf = async () => {
     const res = await r2.get("https://gateway.ipfs.io/ipfs/QmQbvkaw5j8TFeeR7c5Cs2naDciUVq9cLWnV3iNEzE784r").response
     return res.buffer();
@@ -31,5 +33,6 @@ const getAccountsBuf = async () => {
 
 module.exports = {
     makeTree,
-    getAccountsBuf
-}
+    makeTreeFromAccounts,
+    getAccountsBuf,
+};

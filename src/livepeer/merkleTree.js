@@ -5,16 +5,11 @@ const { sha3, bufferToHex, bufferToInt, setLengthLeft } = require("ethereumjs-ut
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/test/helpers/merkleTree.js
 
 module.exports = class MerkleTree {
-    constructor (elements, layers) {
-        if (elements && !layers) {
-            // Hash elements
-            this.elements = elements.map(el => sha3(el))
-            // Create layers
-            this.layers = this.getLayers(this.elements)            
-        } else if (elements && layers) {
-            this.elements = elements.map(el => sha3(el))
-            this.layers = layers;
-        }
+    constructor (elements) {
+        // Hash elements
+        this.elements = elements.map(el => sha3(el));
+        // Create layers
+        this.layers = this.getLayers(this.elements);
     }
 
     getLayers (elements) {
