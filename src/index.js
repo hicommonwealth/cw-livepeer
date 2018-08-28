@@ -13,7 +13,7 @@ let caller = process.env.ETHEREUM_ADDRESS;
 let password = process.env.ETHEREUM_ADDRESS_PASSWORD;
 let acctFile = process.env.ACCOUNT_FILE;
 let datadir = process.env.KEYSTORE_DATA_DIR || '~/lpData/keystore';
-let merkleMineAddress = process.env.MERKLE_MINE_ADDRESS;
+
 
 async function main() {
   // Get database and status of last run
@@ -30,15 +30,15 @@ async function main() {
     merkleTree = await ethUtil.setupMerkleTree(accounts);
   }
 
-  const MerkleMiner = await ethUtil.setupMerkleMiner(
-    merkleTree,
-    merkleMineAddress,
-    password,
-    caller,
-    datadir
-  );
+  const merkleMiner = await ethUtil.setupMerkleMiner({
+    merkleTree: merkleTree,
+    caller: caller,
+    network: network,
+    password: password,
+    datadir: datadir,
+  });
 
-  console.log(MerkleMiner);
+  console.log(merkleMiner);
 }
 
 main();

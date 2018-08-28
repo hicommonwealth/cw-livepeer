@@ -4,7 +4,29 @@ import MerkleMiner from './livepeer/MerkleMiner';
 import TxKeyManager from './livepeer/TxKeyManager';
 import * as livepeerHelpers from './livepeer/helpers';
 
-export const setupWeb3Provider = async (network, merklemine) => {
+export const getContractAddress = async (network) => {
+  let contractAddresses;
+  switch (network) {
+    case 'mainnet':
+      contractAddresses = {
+        merkleMine: '0x8e306b005773bee6ba6a6e8972bc79d766cc15c8',
+        multiMerkleMine: '0x182ebf4c80b28efc45ad992ecbb9f730e31e8c7f',
+        token: '0x58b6a8a3302369daec383334672404ee733ab239',
+      };
+    case 'rinkeby':
+      contractAddresses = {
+        merkleMine: '0x3bb5c927b9dcf20c1dca97b93397d22fda4f5451',
+        multiMerkleMine: '0x2ec3202aaeff2d3f7dd8571fe4a0bfc195ef6a17',
+        token: '0x750809dbdb422e09dabb7429ffaa94e42021ea04',
+      };
+    default:
+      break;
+  }
+
+  return contractAddresses;
+};
+
+export const setupWeb3Provider = async (merkleMine, network) => {
   console.log('Setting up livepeer merkle mine functionality');
   let provider;
 
@@ -54,16 +76,23 @@ export const setupMerkleTree = async (accounts) => {
   return await livepeerHelpers.makeTreeFromAccounts(accounts);
 }
 
-export const setupMerkleMiner = async (merkleTree, merkleMineAddress, password, caller, datadir) => {
-  const provider = setupWeb3Provider();
-  const MerkleMiner = new MerkleMiner(provider, merkleTree, merkleMine, caller);
+export const setupMerkleMiner = async (props) => {
+  const cAddresses = getContractAddress(props.network);
+  const provider = setupWeb3Provider(cAddresses.merkleMineAddress, props.network);
+  const merkelMiner = new MerkleMiner(
+    provider,
+    props.merkleTree,
+    cAddresses.merkleMineAddress,
+    cAddresses.multiMerkleMineAddress,
+    props.caller
+  );
 
   // Perform checks
-  await MerkleMiner.performChecks();
+  await merkelMiner.performChecks();
 
   // Unlock caller account
-  const txKeyManager = new TxKeyManager(datadir, caller);
-  await txKeyManager.unlock(password);
+  const txKeyManager = new TxKeyManager(props.datadir, props.caller);
+  await txKeyManager.unlock(props.password);
 
-  return Merkleminer;
+  return merkelMiner;
 };

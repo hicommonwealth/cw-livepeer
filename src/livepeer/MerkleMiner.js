@@ -21,7 +21,7 @@ module.exports = class MerkleMiner {
 
     async performChecks() {
         const merkleMine = await this.getMerkleMine();
-
+        console.log(merkleMine);
         // Validate len(candidateAccounts) == totalGenesisRecipients
         const numCandidateAccounts = this.merkleTree.getNumLeaves()
         const totalGenesisRecipients = await merkleMine.methods.totalGenesisRecipients().call()
@@ -85,10 +85,10 @@ module.exports = class MerkleMiner {
 
     async getMerkleMine() {
         if (this.merkleMine == undefined) {
-            this.merkleMine = new this.web3.eth.Contract(MerkleMineArtifact.abi, this.merkleMineAddress)
+            this.merkleMine = new this.web3.eth.Contract(MerkleMineArtifact.abi, this.merkleMineAddress);
         }
 
-        return this.merkleMine
+        return this.merkleMine;
     }
 
     async getMultiMerkleMine() {

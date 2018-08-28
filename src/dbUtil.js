@@ -29,7 +29,7 @@ export const syncAccounts = async (db, coll, accounts) => {
   );
 
   // Update status of workflow
-  await db.collection(coll).update({ type: 'status' }, {
+  await db.collection(coll).updateOne({ type: 'status' }, {
     $set: {
       addedAccounts: true,
       updatedAccounts: false,
