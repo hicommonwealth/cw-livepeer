@@ -4,7 +4,7 @@ import MerkleMiner from './livepeer/MerkleMiner';
 import TxKeyManager from './livepeer/TxKeyManager';
 import * as livepeerHelpers from './livepeer/helpers';
 
-export const getContractAddress = async (network) => {
+export const getContractAddress = (network) => {
   let contractAddresses;
   switch (network) {
     case 'mainnet':
@@ -13,12 +13,14 @@ export const getContractAddress = async (network) => {
         multiMerkleMine: '0x182ebf4c80b28efc45ad992ecbb9f730e31e8c7f',
         token: '0x58b6a8a3302369daec383334672404ee733ab239',
       };
+      break;
     case 'rinkeby':
       contractAddresses = {
         merkleMine: '0x3bb5c927b9dcf20c1dca97b93397d22fda4f5451',
         multiMerkleMine: '0x2ec3202aaeff2d3f7dd8571fe4a0bfc195ef6a17',
         token: '0x750809dbdb422e09dabb7429ffaa94e42021ea04',
       };
+      break;
     default:
       break;
   }
@@ -26,36 +28,21 @@ export const getContractAddress = async (network) => {
   return contractAddresses;
 };
 
-export const setupWeb3Provider = async (merkleMine, network) => {
+export const setupWeb3Provider = (merkleMine, network) => {
   console.log('Setting up livepeer merkle mine functionality');
   let provider;
 
   switch (network) {
     case 'mainnet':
       provider = new Web3.providers.HttpProvider("https://mainnet.infura.io")
-
-      if (merkleMine === undefined) {
-          // Default to known MerkleMine contract address on mainnet
-          merkleMine = "0x8e306b005773bee6ba6a6e8972bc79d766cc15c8";
-      }
-
       console.log("Using the Ethereum main network")
       break;
     case 'rinkby':
       provider = new Web3.providers.HttpProvider("https://rinkeby.infura.io")
-
-      if (merkleMine === undefined || acctFile === undefined) {
-          throw new Error("Must provide both MerkleMine contract address and accounts file when using the Rinkeby Ethereum test network")
-      }
-
       console.log("Using the Ethereum rinkeby network")
       break;
     default:
       provider = new Web3.providers.HttpProvider("http://localhost:8545")
-      if (merkleMine === undefined || acctFile === undefined) {
-          throw new Error("Must provide both MerkleMine contract address and accounts file when using a custom development network")
-      }
-
       console.log("Using localhost:8545")
       break;
   }
@@ -78,12 +65,13 @@ export const setupMerkleTree = async (accounts) => {
 
 export const setupMerkleMiner = async (props) => {
   const cAddresses = getContractAddress(props.network);
-  const provider = setupWeb3Provider(cAddresses.merkleMineAddress, props.network);
+  const provider = setupWeb3Provider(cAddresses.merkleMine, props.network);
+
   const merkelMiner = new MerkleMiner(
     provider,
     props.merkleTree,
-    cAddresses.merkleMineAddress,
-    cAddresses.multiMerkleMineAddress,
+    cAddresses.merkleMine,
+    cAddresses.multiMerkleMine,
     props.caller
   );
 

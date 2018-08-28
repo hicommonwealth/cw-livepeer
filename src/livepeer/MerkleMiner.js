@@ -14,14 +14,14 @@ module.exports = class MerkleMiner {
         this.web3 = new Web3();
         this.web3.setProvider(provider);
         this.merkleTree = merkleTree;
-        this.merkleMineAddress = addHexPrefix(merkleMineAddress);
-        this.multiMerkleMineAddress = addHexPrefix(multiMerkleMineAddress);
+        this.merkleMineAddress = merkleMineAddress;
+        this.multiMerkleMineAddress = multiMerkleMineAddress;
         this.callerAddress = callerAddress;
     }
 
     async performChecks() {
         const merkleMine = await this.getMerkleMine();
-        console.log(merkleMine);
+
         // Validate len(candidateAccounts) == totalGenesisRecipients
         const numCandidateAccounts = this.merkleTree.getNumLeaves()
         const totalGenesisRecipients = await merkleMine.methods.totalGenesisRecipients().call()

@@ -1,6 +1,7 @@
 /** @flow */
+require('dotenv').config()
 import Promise from 'bluebird';
-
+import program from 'commander';
 import * as ethUtil from './ethUtil';
 import * as dbUtil from './dbUtil';
 
@@ -12,22 +13,23 @@ let network = process.env.ETHEREUM_NETWORK || 'mainnet';
 let caller = process.env.ETHEREUM_ADDRESS;
 let password = process.env.ETHEREUM_ADDRESS_PASSWORD;
 let acctFile = process.env.ACCOUNT_FILE;
-let datadir = process.env.KEYSTORE_DATA_DIR || '~/lpData/keystore';
+let datadir = process.env.KEYSTORE_DATA_DIR || '~/.lpData';
 
 
 async function main() {
+
   // Get database and status of last run
   const db = await dbUtil.getDatabase(connectionString, dbName);
-  const status = await dbUtil.getStatus(db, stateCollection);
+  const collections = await db.collections();
 
   let merkleTree;
-  if (!status.addedAccounts) {
+  if (stateCollection in collections) {
+    const accounts = await dbUtil.getAccounts();
+    merkleTree = await ethUtil.setupMerkleTree(accounts);
+  } else {
     const data = await ethUtil.setupMerkleData();
     merkleTree = data.merkleTree;
     await dbUtil.syncAccounts(db, stateCollection, data.accounts);
-  } else {
-    const accounts = await dbUtil.getAccounts();
-    merkleTree = await ethUtil.setupMerkleTree(accounts);
   }
 
   const merkleMiner = await ethUtil.setupMerkleMiner({
@@ -38,7 +40,10 @@ async function main() {
     datadir: datadir,
   });
 
-  console.log(merkleMiner);
+  db.collection(stateCollection).find({ type: 'address' })
+  .forEach(doc => {
+    console.log(doc);
+  });
 }
 
 main();

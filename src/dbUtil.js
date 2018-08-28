@@ -12,11 +12,6 @@ export const getDatabase = (connString, databaseName) => {
   });
 };
 
-export const getStatus = async (db, coll) => {
-  const status = await db.collection(coll).find({ type: 'status' }).toArray();
-  return (status.length > 0) ? status[0] : {};
-};
-
 export const getAccounts = async (db, coll) => {
   const accounts = await db.collection(coll).find({ type: 'address' }).toArray();
   return accounts.map(elt => (elt.address));
@@ -27,12 +22,4 @@ export const syncAccounts = async (db, coll, accounts) => {
   await db.collection(coll).insertMany(
     accounts.map(a => ({type: 'address', address: a.toString() }))
   );
-
-  // Update status of workflow
-  await db.collection(coll).updateOne({ type: 'status' }, {
-    $set: {
-      addedAccounts: true,
-      updatedAccounts: false,
-    }
-  });
 };
