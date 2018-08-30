@@ -3,6 +3,7 @@ import Web3 from 'web3';
 import MerkleMiner from './livepeer/MerkleMiner';
 import TxKeyManager from './livepeer/TxKeyManager';
 import * as livepeerHelpers from './livepeer/helpers';
+import * as fileUtil from './fileUtil';
 
 export const getContractAddress = (network) => {
   let contractAddresses;
@@ -50,17 +51,23 @@ export const setupWeb3Provider = (merkleMine, network) => {
   return provider;
 };
 
-export const setupMerkleData = async () => {
+export const setupMerkleData = async (path) => {
   console.log('Collecting accounts from livepeer IPFS link')
   const accountsBuf = await livepeerHelpers.getAccountsBuf();
+
+  // Write accounts to file
+  console.log(`Writing accounts to file: ${process.cwd()}${path}`);
+  await fileUtil.writeFile(`${process.cwd()}${path}`, accountsBuf);
 
   console.log('Creating merkle tree from valid accounts');
   return await livepeerHelpers.makeTree(accountsBuf);
 }
 
-export const setupMerkleTree = async (accounts) => {
+export const setupMerkleTree = async (path) => {
   console.log('Creating merkle tree from stored accounts');
-  return await livepeerHelpers.makeTreeFromAccounts(accounts);
+  console.log(`Reading accounts from file: ${process.cwd()}${path}`);
+  const accountsBuf = await fileUtil.readFile(`${process.cwd()}${path}`);
+  return await livepeerHelpers.makeTree(accountsBuf);
 }
 
 export const setupMerkleMiner = async (props) => {
@@ -77,10 +84,11 @@ export const setupMerkleMiner = async (props) => {
 
   // Perform checks
   await merkelMiner.performChecks();
+  return merkelMiner;
+};
 
+export const unlockAddress = async (props) => {
   // Unlock caller account
   const txKeyManager = new TxKeyManager(props.datadir, props.caller);
   await txKeyManager.unlock(props.password);
-
-  return merkelMiner;
 };

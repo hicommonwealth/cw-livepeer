@@ -80,7 +80,14 @@ module.exports = class MerkleMiner {
         const merkleMine = await this.getMerkleMine();
 
         // Validate that the recipient's token allocation has not been generated
-        return await merkleMine.methods.generated(recipientAddress).call()
+        let value;
+        try {
+            value = await merkleMine.methods.generated(recipientAddress).call();
+        } catch (exception) {
+            console.log(`Failed to check generation for address: ${recipientAddress}`);
+        }
+
+        return value;
     }
 
     async getMerkleMine() {

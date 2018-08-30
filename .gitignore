@@ -3,6 +3,7 @@
 npm-debug.log*
 yarn-error.log
 yarn.lock
+data
 
 # Dependencies
 node_modules/

@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 import program from 'commander';
 import * as ethUtil from './ethUtil';
 import * as dbUtil from './dbUtil';
+import * as fileUtil from './fileUtil';
 
 // Constants
 let connectionString = process.env.MONGO_CONNECTION_URL || 'mongodb://127.0.0.1:27017/';
@@ -14,24 +15,24 @@ let caller = process.env.ETHEREUM_ADDRESS;
 let password = process.env.ETHEREUM_ADDRESS_PASSWORD;
 let acctFile = process.env.ACCOUNT_FILE;
 let datadir = process.env.KEYSTORE_DATA_DIR || '~/.lpData';
+let accountsPath = process.env.ACCOUNTS_FILE_PATH || '/data/accounts.txt';
 
-
-async function main() {
-
+async function setupDatabase() {
   // Get database and status of last run
-  const db = await dbUtil.getDatabase(connectionString, dbName);
-  const collections = await db.collections();
+  return await dbUtil.getDatabase(connectionString, dbName);
+}
 
-  let merkleTree;
-  if (stateCollection in collections) {
-    const accounts = await dbUtil.getAccounts();
-    merkleTree = await ethUtil.setupMerkleTree(accounts);
-  } else {
-    const data = await ethUtil.setupMerkleData();
-    merkleTree = data.merkleTree;
-    await dbUtil.syncAccounts(db, stateCollection, data.accounts);
-  }
+async function syncGeneratedAccounts (db, merkleMiner) {
+  db.collection(stateCollection).find({ type: 'address' })
+  .forEach(async doc => {
+    const hasGenerated = await merkleMiner.hasGenerated(doc.address);
+    await dbUtil.updateAccount(db, stateCollection, doc.address, {
+      hasGenerated: hasGenerated
+    });
+  });
+}
 
+async function getMerkleMiner(merkleTree) {
   const merkleMiner = await ethUtil.setupMerkleMiner({
     merkleTree: merkleTree,
     caller: caller,
@@ -40,10 +41,27 @@ async function main() {
     datadir: datadir,
   });
 
-  db.collection(stateCollection).find({ type: 'address' })
-  .forEach(doc => {
-    console.log(doc);
-  });
+  return merkleMiner;
+}
+
+async function getMerkleTreeData(db) {
+  const data = await ethUtil.setupMerkleData(accountsPath);
+  return data;
+}
+
+async function syncAccountsWithDatabase(db, accounts) {
+  await dbUtil.syncAccounts(db, stateCollection, accounts);
+}
+
+async function main() {
+  const db = await setupDatabase();
+
+  const data = await getMerkleTreeData(db);
+  await syncAccountsWithDatabase(db, data.accounts);
+
+  const merkleMiner = await getMerkleMiner(data.merkleTree);
+  await syncGeneratedAccounts(db, merkleMiner);
+  process.exit();
 }
 
 main();

@@ -20,6 +20,20 @@ export const getAccounts = async (db, coll) => {
 export const syncAccounts = async (db, coll, accounts) => {
   // Add accounts into the database
   await db.collection(coll).insertMany(
-    accounts.map(a => ({type: 'address', address: a.toString() }))
+    accounts.map(a => {
+      return {
+        type: 'address',
+        address: '0x' + a.toString('hex'),
+      };
+    })
   );
 };
+
+export const updateAccount = async (db, coll, address, update) => {
+  // Update account with update value
+  await db.collection(coll).updateOne({
+    address: address
+  }, {
+    $set: update
+  });
+}
