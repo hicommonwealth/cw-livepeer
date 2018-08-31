@@ -6,6 +6,10 @@ import * as ethUtil from './ethUtil';
 import * as dbUtil from './dbUtil';
 import * as fileUtil from './fileUtil';
 
+program
+  .option('-g', '--generated')
+  .parse(process.argv);
+
 // Constants
 let connectionString = process.env.MONGO_CONNECTION_URL || 'mongodb://127.0.0.1:27017/';
 let dbName = process.env.DATABASE_NAME || 'livepeer';
@@ -23,13 +27,30 @@ async function setupDatabase() {
 }
 
 async function syncGeneratedAccounts (db, merkleMiner) {
-  db.collection(stateCollection).find({ type: 'address' })
-  .forEach(async doc => {
-    const hasGenerated = await merkleMiner.hasGenerated(doc.address);
-    await dbUtil.updateAccount(db, stateCollection, doc.address, {
-      hasGenerated: hasGenerated
-    });
+  let cursor = db.collection(stateCollection).find({
+    type: 'address',
+    hasGenerated: { $exists: false },
+    hasNotGenerated: { $exists: false },
   });
+
+  while (await cursor.hasNext()) {
+    let doc = await cursor.next();
+    let hasGenerated = await merkleMiner.hasGenerated(doc.address);
+    console.log(hasGenerated, doc.address);
+    if (hasGenerated) {
+      await db.collection(stateCollection).updateOne({
+        address: doc.address
+      }, {
+        $set: { hasGenerated }
+      });
+    } else {
+      await db.collection(stateCollection).updateOne({
+        address: doc.address
+      }, {
+        $set: { hasNotGenerated: hasGenerated }
+      });
+    }
+  }
 }
 
 async function getMerkleMiner(merkleTree) {
@@ -54,6 +75,7 @@ async function syncAccountsWithDatabase(db, accounts) {
 }
 
 async function main() {
+  console.log('MAIN');
   const db = await setupDatabase();
 
   const data = await getMerkleTreeData(db);
@@ -64,4 +86,16 @@ async function main() {
   process.exit();
 }
 
-main();
+async function generated() {
+  console.log('GENERATED');
+  const db = await setupDatabase();
+  const merkleMiner = await getMerkleMiner();
+  await syncGeneratedAccounts(db, merkleMiner);
+  process.exit();
+}
+
+if (program.G) {
+  generated();
+} else {
+  main();
+}

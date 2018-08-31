@@ -45,7 +45,8 @@
     "build": "babel src/ -d dist",
     "build:watch": "babel --watch src/ -d dist",
     "start": "npm run build && node --max-old-space-size=4096 dist/",
-    "start:watch": "node_modules/babel-watch/babel-watch.js src/"
+    "start:watch": "node_modules/babel-watch/babel-watch.js src/",
+    "start:generated": "npm run build && node --max-old-space-size=4096 dist/ -g"
   },
   "dependencies": {
     "@types/mongodb": "^3.1.4",

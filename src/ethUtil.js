@@ -83,7 +83,10 @@ export const setupMerkleMiner = async (props) => {
   );
 
   // Perform checks
-  await merkelMiner.performChecks();
+  if (props.merkleTree) {
+    await merkelMiner.performChecks();
+  }
+
   return merkelMiner;
 };
 
