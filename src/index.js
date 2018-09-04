@@ -36,7 +36,7 @@ async function syncGeneratedAccounts (db, merkleMiner) {
   while (await cursor.hasNext()) {
     let doc = await cursor.next();
     let hasGenerated = await merkleMiner.hasGenerated(doc.address);
-    console.log(hasGenerated, doc.address);
+
     if (hasGenerated) {
       await db.collection(stateCollection).updateOne({
         address: doc.address
