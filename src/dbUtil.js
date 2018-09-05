@@ -36,4 +36,10 @@ export const updateAccount = async (db, coll, address, update) => {
   }, {
     $set: update
   });
-}
+};
+
+export const getAccountsCount = async (db, coll) => {
+  return await db.collection(coll).find({
+    type: 'address',
+  }).count();
+};

@@ -15,7 +15,7 @@ program
 let connectionString = process.env.MONGO_CONNECTION_URL || 'mongodb://127.0.0.1:27017/';
 let dbName = process.env.DATABASE_NAME || 'livepeer';
 let network = process.env.ETHEREUM_NETWORK || 'rinkeby';
-let stateCollection = `${network}-${process.env.STATE_COLLECTION}` || `${network}-state`;
+let stateCollection = `${network}_${process.env.STATE_COLLECTION}` || `${network}_state`;
 let caller = process.env.ETHEREUM_ADDRESS;
 let password = process.env.ETHEREUM_ADDRESS_PASSWORD;
 let acctFile = process.env.ACCOUNT_FILE;
@@ -28,6 +28,32 @@ let minGasPrice = process.env.MIN_GAS_PRICE;
 async function setupDatabase() {
   // Get database and status of last run
   return await dbUtil.getDatabase(connectionString, dbName);
+}
+
+async function storeAccounts (db, accounts) {
+  const count = await dbUtil.getAccountsCount(db, stateCollection);
+
+  if (count > 0) {
+    return;
+  } else {
+    await dbUtil.syncAccounts(db, stateCollection, accounts);
+  }
+}
+
+async function updateGeneratedAccount(db, hasGenerated, address) {
+  if (hasGenerated) {
+    await db.collection(stateCollection).updateOne({
+      address: address
+    }, {
+      $set: { hasGenerated }
+    });
+  } else {
+    await db.collection(stateCollection).updateOne({
+      address: address
+    }, {
+      $set: { hasNotGenerated: hasGenerated }
+    });
+  }
 }
 
 async function syncGeneratedAccounts (db, merkleMiner) {
@@ -70,13 +96,13 @@ async function getMerkleMiner(merkleTree) {
 }
 
 
-async function mine(proofQty=30) {
+async function mine(proofQty=20) {
   console.log('MINE');
   const price = await ethUtil.getSafeGasPrice(maxGasPrice, minGasPrice);
   const db = await setupDatabase();
 
   const data = await ethUtil.setupMerkleData();
-  await dbUtil.syncAccounts(db, stateCollection, data.accounts);
+  await storeAccounts(db, data.accounts);
 
   const merkleMiner = await getMerkleMiner(data.merkleTree);
   const txKeyManager = await ethUtil.unlockAddress({
@@ -117,6 +143,8 @@ async function mine(proofQty=30) {
               price,
               recipients,
             );
+
+            await updateGeneratedAccount(db, hasGenerated, doc.address);
           } catch (e) {
             console.log(e);
           }
@@ -124,6 +152,8 @@ async function mine(proofQty=30) {
 
         recipients = [];
       }
+    } else {
+      await updateGeneratedAccount(db, hasGenerated, doc.address);
     }
   }
 }
@@ -148,9 +178,7 @@ async function generated() {
   process.exit();
 }
 
-console.log(`Running on network: ${network}`);
-// console.log(``);
-// console.log(``);
+console.log(`Running on network: ${network}\n`);
 
 if (program.M) {
   mine();
