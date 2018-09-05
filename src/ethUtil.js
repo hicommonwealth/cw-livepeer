@@ -1,4 +1,5 @@
 /** @flow */
+import r2 from 'r2';
 import Web3 from 'web3';
 import MerkleMiner from './livepeer/MerkleMiner';
 import TxKeyManager from './livepeer/TxKeyManager';
@@ -38,7 +39,7 @@ export const setupWeb3Provider = (merkleMine, network) => {
       provider = new Web3.providers.HttpProvider("https://mainnet.infura.io")
       console.log("Using the Ethereum main network")
       break;
-    case 'rinkby':
+    case 'rinkeby':
       provider = new Web3.providers.HttpProvider("https://rinkeby.infura.io")
       console.log("Using the Ethereum rinkeby network")
       break;
@@ -55,9 +56,9 @@ export const setupMerkleData = async (path) => {
   console.log('Collecting accounts from livepeer IPFS link')
   const accountsBuf = await livepeerHelpers.getAccountsBuf();
 
-  // Write accounts to file
-  console.log(`Writing accounts to file: ${process.cwd()}${path}`);
-  await fileUtil.writeFile(`${process.cwd()}${path}`, accountsBuf);
+  // // Write accounts to file
+  // console.log(`Writing accounts to file: ${process.cwd()}${path}`);
+  // await fileUtil.writeFile(`${process.cwd()}${path}`, accountsBuf);
 
   console.log('Creating merkle tree from valid accounts');
   return await livepeerHelpers.makeTree(accountsBuf);
@@ -94,4 +95,21 @@ export const unlockAddress = async (props) => {
   // Unlock caller account
   const txKeyManager = new TxKeyManager(props.datadir, props.caller);
   await txKeyManager.unlock(props.password);
+  return txKeyManager;
+};
+
+export const getSafeGasPrice = async (maxPrice, minPrice) => {
+  maxPrice = Number(maxPrice);
+  minPrice = Number(minPrice);
+
+  const gasResp = await r2.get('https://ethgasstation.info/json/ethgasAPI.json').response;
+  const gasJson = await gasResp.json();
+  const tmp = Math.ceil(((gasJson.safeLow/10) + 0.09)*1000000000);
+  console.log(tmp, 'vs', maxPrice);
+  if (tmp > maxPrice) {
+      return maxPrice;
+  } else if (tmp < minPrice) {
+      return minPrice;
+  }
+  return tmp;
 };

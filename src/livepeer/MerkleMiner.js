@@ -7,6 +7,7 @@ const Web3 = require("web3")
 const BigNumber = require("bignumber.js")
 const { addHexPrefix } = require("ethereumjs-util")
 const MerkleMineArtifact = require("../../artifacts/MerkleMine.json")
+const MultiMerkleMineArtifact = require("../../artifacts/MultiMerkleMine.json")
 const ERC20Artifact = require("../../artifacts/ERC20.json")
 
 module.exports = class MerkleMiner {
@@ -99,7 +100,7 @@ module.exports = class MerkleMiner {
     }
 
     async getMultiMerkleMine() {
-        if (this.getMultiMerkleMine == undefined) {
+        if (this.multiMerkleMine == undefined) {
             this.multiMerkleMine = new this.web3.eth.Contract(MultiMerkleMineArtifact.abi, this.multiMerkleMineAddress);
         }
 
@@ -116,16 +117,22 @@ module.exports = class MerkleMiner {
         return this.token
     }
 
-    // TODO: FINISH THIS IT IS NOT COMPLETE
-    // TODO: TEST TEST TEST TEST TEST TEST
     async submitBatchProofs(txKeyManager, callerAddress, gasPrice, recipients) {
         const multiMerkleMine = await this.getMultiMerkleMine();
-        const generateFn = merkleMine.methods.multiGenerate(
-            this.merkleMineAddress,
+        const proofs = this.merkleTree.getHexBatchProofs(recipients);
+
+        // const call = await multiMerkleMine.methods.multiGenerate(
+        //     this.merkleMineAddress.slice(2),
+        //     recipients,
+        //     this.merkleTree.getHexBatchProofs(recipients)
+        // ).call();
+
+        const generateFn = multiMerkleMine.methods.multiGenerate(
+            this.merkleMineAddress.slice(2),
             recipients,
             this.merkleTree.getHexBatchProofs(recipients)
         );
-        const gas = await generateFn.estimateGas({ from: callerAddress });
+
         const data = generateFn.encodeABI();
         const nonce = await this.web3.eth.getTransactionCount(callerAddress, "pending");
         const networkId = await this.web3.eth.net.getId();
@@ -133,7 +140,7 @@ module.exports = class MerkleMiner {
         const signedTx = txKeyManager.signTransaction({
             nonce: nonce,
             gasPrice: gasPrice,
-            gasLimit: gas,
+            gasLimit: 170000 * recipients.length,
             to: this.multiMerkleMineAddress,
             value: 0,
             data: data,
@@ -141,7 +148,7 @@ module.exports = class MerkleMiner {
         });
 
         const receipt = await this.web3.eth.sendSignedTransaction(signedTx).on("transactionHash", txHash => {
-            console.log(`Submitted tx ${txHash}`)
+            console.log(`Submitted tx ${txHash}`);
         });
 
         if (receipt.status === "0x0") {

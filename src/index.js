@@ -8,18 +8,22 @@ import * as fileUtil from './fileUtil';
 
 program
   .option('-g', '--generated')
+  .option('-m', '--mine')
   .parse(process.argv);
 
 // Constants
 let connectionString = process.env.MONGO_CONNECTION_URL || 'mongodb://127.0.0.1:27017/';
 let dbName = process.env.DATABASE_NAME || 'livepeer';
-let stateCollection = process.env.STATE_COLLECTION || 'state';
-let network = process.env.ETHEREUM_NETWORK || 'mainnet';
+let network = process.env.ETHEREUM_NETWORK || 'rinkeby';
+let stateCollection = `${network}-${process.env.STATE_COLLECTION}` || `${network}-state`;
 let caller = process.env.ETHEREUM_ADDRESS;
 let password = process.env.ETHEREUM_ADDRESS_PASSWORD;
 let acctFile = process.env.ACCOUNT_FILE;
 let datadir = process.env.KEYSTORE_DATA_DIR || '~/.lpData';
 let accountsPath = process.env.ACCOUNTS_FILE_PATH || '/data/accounts.txt';
+
+let maxGasPrice = process.env.MAX_GAS_PRICE;
+let minGasPrice = process.env.MIN_GAS_PRICE;
 
 async function setupDatabase() {
   // Get database and status of last run
@@ -65,21 +69,66 @@ async function getMerkleMiner(merkleTree) {
   return merkleMiner;
 }
 
-async function getMerkleTreeData(db) {
-  const data = await ethUtil.setupMerkleData(accountsPath);
-  return data;
-}
 
-async function syncAccountsWithDatabase(db, accounts) {
-  await dbUtil.syncAccounts(db, stateCollection, accounts);
+async function mine(proofQty=20) {
+  console.log('MINE');
+  const price = await ethUtil.getSafeGasPrice(maxGasPrice, minGasPrice);
+  const db = await setupDatabase();
+
+  const data = await ethUtil.setupMerkleData();
+  await dbUtil.syncAccounts(db, stateCollection, data.accounts);
+
+  const merkleMiner = await getMerkleMiner(data.merkleTree);
+  const txKeyManager = await ethUtil.unlockAddress({
+    datadir: datadir,
+    caller: caller,
+    password: password,
+  });
+
+  let cursor = db.collection(stateCollection).find({
+    type: 'address',
+    hasGenerated: { $exists: false },
+    hasNotGenerated: { $exists: false },
+  });
+
+  let qty = proofQty;
+  let recipients = []
+  while (await cursor.hasNext()) {
+    let doc = await cursor.next();
+    let hasGenerated = await merkleMiner.hasGenerated(doc.address);
+
+    console.log(`${recipients.length + 1}, ${hasGenerated}, ${doc.address}`);
+
+    if (!hasGenerated) {
+      if (recipients.length < proofQty - 1) {
+        recipients.push(doc.address);
+      } else {
+        recipients.push(doc.address);
+
+        console.log(`Submitting batch proofs on behalf of ${caller}`);
+        try {
+          await merkleMiner.submitBatchProofs(
+            txKeyManager,
+            caller,
+            price,
+            recipients,
+          );
+        } catch (e) {
+          console.log(e);
+        }
+
+        recipients = [];
+      }
+    }
+  }
 }
 
 async function main() {
   console.log('MAIN');
   const db = await setupDatabase();
 
-  const data = await getMerkleTreeData(db);
-  await syncAccountsWithDatabase(db, data.accounts);
+  const data = await ethUtil.setupMerkleData();
+  await dbUtil.syncAccounts(db, stateCollection, data.accounts);
 
   const merkleMiner = await getMerkleMiner(data.merkleTree);
   await syncGeneratedAccounts(db, merkleMiner);
@@ -94,7 +143,13 @@ async function generated() {
   process.exit();
 }
 
-if (program.G) {
+console.log(`Running on network: ${network}`);
+// console.log(``);
+// console.log(``);
+
+if (program.M) {
+  mine();
+} else if (program.G) {
   generated();
 } else {
   main();
