@@ -92,7 +92,8 @@ async function mine(proofQty=30) {
   });
 
   let qty = proofQty;
-  let recipients = []
+  let recipients = [];
+  let sillyBoolForSafety = true;
   while (await cursor.hasNext()) {
     let doc = await cursor.next();
     let hasGenerated = await merkleMiner.hasGenerated(doc.address);
@@ -105,16 +106,20 @@ async function mine(proofQty=30) {
       } else {
         recipients.push(doc.address);
 
-        console.log(`Submitting batch proofs on behalf of ${caller}`);
-        try {
-          await merkleMiner.submitBatchProofs(
-            txKeyManager,
-            caller,
-            price,
-            recipients,
-          );
-        } catch (e) {
-          console.log(e);
+        if (sillyBoolForSafety) {
+          sillyBoolForSafety = false;
+        } else {
+          console.log(`Submitting batch proofs on behalf of ${caller}`);
+          try {
+            await merkleMiner.submitBatchProofs(
+              txKeyManager,
+              caller,
+              price,
+              recipients,
+            );
+          } catch (e) {
+            console.log(e);
+          }
         }
 
         recipients = [];
