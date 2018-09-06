@@ -131,10 +131,16 @@ module.exports = class MerkleMiner {
     const nonce = await this.web3.eth.getTransactionCount(callerAddress, "pending");
     const networkId = await this.web3.eth.net.getId();
 
+    let gasLimit = (170000 * recipients.length >= 7996144)
+      ? 7900000
+      : 170000 * recipients.length;
+
+    console.log('Gaslimit', gasLimit);
+
     const tx = {
       nonce: nonce,
       gasPrice: gasPrice,
-      gasLimit: 170000 * recipients.length,
+      gasLimit: gasLimit,
       to: this.multiMerkleMineAddress,
       value: 0,
       data: data,
@@ -146,6 +152,8 @@ module.exports = class MerkleMiner {
       const receipt = await this.web3.eth.sendSignedTransaction(signedTx).on("transactionHash", txHash => {
         console.log(`Submitted tx ${txHash}`);
       });
+
+      console.log(receipt);
 
       if (receipt.status === "0x0") {
         throw new Error(`Failed to generate allocation in tx ${receipt.transactionHash}`);
@@ -164,5 +172,7 @@ module.exports = class MerkleMiner {
         }
       }
     }
+
+    console.log('Finished submitting...');
   }
 }

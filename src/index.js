@@ -96,7 +96,7 @@ async function getMerkleMiner(merkleTree) {
 }
 
 
-async function mine(proofQty=20) {
+async function mine(proofQty=40) {
   console.log('MINE');
   const price = await ethUtil.getSafeGasPrice(maxGasPrice, minGasPrice);
   const db = await setupDatabase();
