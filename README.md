@@ -9,6 +9,8 @@ MongoDB
 ## Setup
 `npm i` or `yarn` to install all npm dependencies
 
+`npm i truffle -g` to install truffle globally
+
 `truffle install zeppelin` to install contract dependencies
 
 `mongodb` to start MongoDB.
