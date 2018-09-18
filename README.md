@@ -17,7 +17,7 @@ MongoDB
 
 `.env` configuration file with the following template
 
-Make sure that your key is stored in the same exact format that the `go-livepeer` client would create, in the same location `full/path/to/.lpData/keystore`. The code will look in `~/.lpData` and resolve where the key is as long as it is named and formatted as an encrypted JSON blog with the filename as the UTC creation time and associated address. 
+Make sure that your key is stored in the same exact format that the `go-livepeer` client would create, in the same location `full/path/to/.lpData/keystore`. The code will look in `~/.lpData` and resolve where the key is as long as it is named and formatted as an encrypted JSON blob with the filename as the UTC creation time and associated address. 
 ```
 MONGO_CONNECTION_URL=mongodb://127.0.0.1:27017/
 DATABASE_NAME=livepeer
