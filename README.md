@@ -1,6 +1,11 @@
 # cw-livepeer
 This repo encapsulates a livepeer multi merkle miner that runs with minimal setup. It uses mongodb as a database to keep track of generated addresses allowing you to startup immediately where your multi merkle miner left off. The merkle tree construction requires a lot of memory and as such requires powerful hardware to run.
 
+If you would also be so generous, support our work and bond against our transcoder!
+https://explorer.livepeer.org/accounts/0x346c7f442ab4941a97c8a63062bd40ef0f9dbd15/transcoding
+
+Address: 0x346c7f442ab4941a97c8a63062bd40ef0f9dbd15
+
 ## Dependencies
 A device with 4 GB of RAM
 
